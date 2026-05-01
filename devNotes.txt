@@ -1,0 +1,8 @@
+Antes de cerrar esta sesión de setup, una cosa importante: cada vez que quieras trabajar en el front el flujo va a ser:
+bash# Levantar el contenedor
+docker-compose up -d
+
+# Arrancar Vite
+docker-compose exec frontend sh -c "npm run dev"
+Y para detenerlo:
+bashdocker-compose down
