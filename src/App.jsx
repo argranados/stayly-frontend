@@ -6,6 +6,12 @@ import BookingPage from './pages/booking/BookingPage'
 import BookingConfirmationPage from './pages/booking/BookingConfirmationPage'
 import MyBookingsPage from './pages/user/MyBookingsPage'
 import MyBookingDetailPage from './pages/user/MyBookingDetailPage'
+import AdminDashboardPage from './pages/admin/AdminDashboardPage'
+import HotelFormPage from './pages/admin/HotelFormPage'
+import RoomsAdminPage from './pages/admin/RoomsAdminPage'
+import RoomFormPage from './pages/admin/RoomFormPage'
+import BookingsAdminPage from './pages/admin/BookingsAdminPage'
+import HotelsAdminPage from './pages/admin/HotelsAdminPage'
 
 function App() {
   return (
@@ -17,7 +23,14 @@ function App() {
         <Route path="/booking/:roomId" element={<BookingPage />} />
         <Route path="/booking/confirmation" element={<BookingConfirmationPage />} />
         <Route path="/my-bookings" element={<MyBookingsPage />} />
-        <Route path="/my-bookings/:id" element={<MyBookingDetailPage />} />
+        <Route path="/my-bookings/:id" element={<MyBookingDetailPage />} />        
+        <Route path="/admin" element={<AdminDashboardPage />} />
+        <Route path="/admin/hotels" element={<HotelsAdminPage />} />
+        <Route path="/admin/hotels/new" element={<HotelFormPage />} />
+        <Route path="/admin/hotels/:id/edit" element={<HotelFormPage />} />
+        <Route path="/admin/hotels/:id/rooms" element={<RoomsAdminPage />} />
+        <Route path="/admin/hotels/:id/rooms/new" element={<RoomFormPage />} />
+        <Route path="/admin/bookings" element={<BookingsAdminPage />} />        
       </Routes>
     </BrowserRouter>
   )
