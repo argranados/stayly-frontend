@@ -10,4 +10,4 @@ services:
       - /app/node_modules
     tty: true
     stdin_open: true
-    command: sh -c "tail -f /dev/null"
+    command: sh -c "npm install && npm run dev"
