@@ -18,7 +18,7 @@ function HotelCard({ hotel }) {
           <div className="flex justify-between items-start mb-1">
             <p className="text-sm font-medium text-slate-800">{hotel.name}</p>
             <p className="text-base font-medium text-slate-800">
-              ${hotel.priceFrom.toLocaleString()}
+              {hotel.priceFrom ? `$${hotel.priceFrom.toLocaleString()}` : 'Ver precios'}
               <span className="text-xs text-slate-400 font-normal"> / noche</span>
             </p>
           </div>

@@ -1,27 +1,52 @@
 import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import Navbar from '../../components/layout/Navbar'
-
-const ROOMS = {
-  101: { type: 'Suite Junior', hotel: 'Grand Fiesta Americana', price: 2800, beds: '1 cama king', capacity: 2 },
-  102: { type: 'Suite Master', hotel: 'Grand Fiesta Americana', price: 3500, beds: '1 cama king + sofá cama', capacity: 3 },
-  103: { type: 'Habitación Deluxe', hotel: 'Grand Fiesta Americana', price: 2200, beds: '2 camas queen', capacity: 2 },
-  201: { type: 'Habitación Deluxe', hotel: 'Camino Real Polanco', price: 2200, beds: '1 cama king', capacity: 2 },
-  202: { type: 'Suite', hotel: 'Camino Real Polanco', price: 3200, beds: '1 cama king + sala', capacity: 3 },
-}
+import { roomService } from '../../services/roomService'
 
 function BookingPage() {
   const { roomId } = useParams()
   const navigate = useNavigate()
-  const room = ROOMS[roomId]
+  const [room, setRoom] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  if (!room) {
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        // El roomService.getById necesita hotelId y roomId
+        // Como no tenemos el hotelId aquí, usamos la URL del browser
+        const hotelId = document.referrer.split('/hotels/')[1]?.split('/')[0]
+        const data = await roomService.getById(hotelId, roomId)
+        setRoom(data)
+      } catch (err) {
+        console.error(err)
+        setError('No se pudo cargar la habitación')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchRoom()
+  }, [roomId])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Navbar />
+        <div className="flex items-center justify-center py-32 text-slate-400">
+          <p className="text-sm">Cargando habitación...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !room) {
     return (
       <div className="min-h-screen bg-slate-50">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-32 text-slate-400">
           <p className="text-lg mb-2">Habitación no encontrada</p>
-          <button onClick={() => navigate('/hotels')} className="text-sm text-blue-600 hover:underline">
-            Regresar a resultados
+          <button onClick={() => navigate(-1)} className="text-sm text-blue-600 hover:underline">
+            Regresar
           </button>
         </div>
       </div>
@@ -29,7 +54,7 @@ function BookingPage() {
   }
 
   const nights = 4
-  const total = room.price * nights
+  const total = Number(room.pricePerNight) * nights
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -50,7 +75,6 @@ function BookingPage() {
           {/* Formulario */}
           <div className="flex-1 flex flex-col gap-4">
 
-            {/* Datos del huésped */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <p className="text-sm font-medium text-slate-800 mb-4">Datos del huésped</p>
               <div className="grid grid-cols-2 gap-4">
@@ -72,13 +96,12 @@ function BookingPage() {
               </div>
             </div>
 
-            {/* Fechas */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <p className="text-sm font-medium text-slate-800 mb-4">Fechas de estancia</p>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: 'Llegada', placeholder: '10/06/2026' },
-                  { label: 'Salida', placeholder: '14/06/2026' },
+                  { label: 'Llegada' },
+                  { label: 'Salida' },
                 ].map(field => (
                   <div key={field.label}>
                     <p className="text-xs text-slate-400 mb-1.5">{field.label}</p>
@@ -91,7 +114,6 @@ function BookingPage() {
               </div>
             </div>
 
-            {/* Solicitudes especiales */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
               <p className="text-sm font-medium text-slate-800 mb-4">Solicitudes especiales</p>
               <textarea
@@ -111,23 +133,15 @@ function BookingPage() {
               <div className="bg-gradient-to-br from-slate-700 to-blue-900 rounded-lg h-24 mb-4" />
 
               <p className="text-sm font-medium text-slate-800 mb-1">{room.type}</p>
-              <p className="text-xs text-slate-400 mb-4">{room.hotel}</p>
+              <p className="text-xs text-slate-400 mb-4">Habitación {room.roomNumber}</p>
 
               <div className="flex flex-col gap-2 mb-4 text-xs text-slate-500">
-                <div className="flex justify-between">
-                  <span>Check-in</span>
-                  <span className="font-medium text-slate-700">10 jun 2026</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Check-out</span>
-                  <span className="font-medium text-slate-700">14 jun 2026</span>
-                </div>
                 <div className="flex justify-between">
                   <span>Noches</span>
                   <span className="font-medium text-slate-700">{nights}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>${room.price.toLocaleString()} x {nights} noches</span>
+                  <span>${Number(room.pricePerNight).toLocaleString()} x {nights} noches</span>
                   <span className="font-medium text-slate-700">${total.toLocaleString()}</span>
                 </div>
               </div>
@@ -146,9 +160,7 @@ function BookingPage() {
                 Confirmar reserva
               </button>
 
-              <p className="text-xs text-slate-400 text-center mt-3">
-                Sin cargos adicionales
-              </p>
+              <p className="text-xs text-slate-400 text-center mt-3">Sin cargos adicionales</p>
             </div>
           </div>
 

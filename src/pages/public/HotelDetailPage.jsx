@@ -1,55 +1,56 @@
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Navbar from '../../components/layout/Navbar'
 import RoomCard from '../../components/room/RoomCard'
-
-const HOTELES = {
-  1: {
-    id: 1,
-    name: 'Grand Fiesta Americana',
-    zone: 'Polanco',
-    city: 'Ciudad de México',
-    address: 'Av. Paseo de la Reforma 80, Polanco',
-    stars: 5,
-    description: 'Hotel de lujo ubicado en el corazón de Polanco, a pasos de los mejores restaurantes y tiendas de la ciudad. Cuenta con spa, alberca y restaurante gourmet.',
-    amenities: ['Spa', 'Alberca', 'Gimnasio', 'Restaurante', 'WiFi', 'Estacionamiento'],
-    rooms: [
-      { id: 101, type: 'Suite Junior', price: 2800, capacity: 2, beds: '1 cama king', available: true },
-      { id: 102, type: 'Suite Master', price: 3500, capacity: 3, beds: '1 cama king + sofá cama', available: true },
-      { id: 103, type: 'Habitación Deluxe', price: 2200, capacity: 2, beds: '2 camas queen', available: true },
-      { id: 104, type: 'Habitación Estándar', price: 1800, capacity: 2, beds: '1 cama matrimonial', available: false },
-    ]
-  },
-  2: {
-    id: 2,
-    name: 'Camino Real Polanco',
-    zone: 'Polanco',
-    city: 'Ciudad de México',
-    address: 'Av. Mariano Escobedo 700, Polanco',
-    stars: 5,
-    description: 'Icónico hotel de diseño arquitectónico único en Polanco. Referente de la hotelería mexicana con más de 50 años de historia.',
-    amenities: ['Alberca', 'Gimnasio', 'Restaurante', 'WiFi', 'Bar', 'Estacionamiento'],
-    rooms: [
-      { id: 201, type: 'Habitación Deluxe', price: 2200, capacity: 2, beds: '1 cama king', available: true },
-      { id: 202, type: 'Suite', price: 3200, capacity: 3, beds: '1 cama king + sala', available: true },
-    ]
-  }
-}
+import { hotelService } from '../../services/hotelService'
+import { roomService } from '../../services/roomService'
 
 function HotelDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const hotel = HOTELES[id]
+  const [hotel, setHotel] = useState(null)
+  const [rooms, setRooms] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  if (!hotel) {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [hotelData, roomsData] = await Promise.all([
+          hotelService.getById(id),
+          roomService.getByHotel(id)
+        ])
+        setHotel(hotelData)
+        setRooms(roomsData)
+      } catch (err) {
+        console.error('Error completo:', err)
+        console.error('Response:', err.response?.data)
+        setError('No se pudo cargar el hotel')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [id])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <Navbar />
+        <div className="flex items-center justify-center py-32 text-slate-400">
+          <p className="text-sm">Cargando hotel...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !hotel) {
     return (
       <div className="min-h-screen bg-slate-50">
         <Navbar />
         <div className="flex flex-col items-center justify-center py-32 text-slate-400">
           <p className="text-lg mb-2">Hotel no encontrado</p>
-          <button
-            onClick={() => navigate('/hotels')}
-            className="text-sm text-blue-600 hover:underline"
-          >
+          <button onClick={() => navigate('/hotels')} className="text-sm text-blue-600 hover:underline">
             Regresar a resultados
           </button>
         </div>
@@ -57,7 +58,7 @@ function HotelDetailPage() {
     )
   }
 
-  const minPrice = Math.min(...hotel.rooms.map(r => r.price))
+  const minPrice = rooms.length > 0 ? Math.min(...rooms.map(r => Number(r.pricePerNight))) : null
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -69,7 +70,7 @@ function HotelDetailPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="text-amber-400 text-sm">{'★'.repeat(hotel.stars)}</span>
             <span className="bg-white/20 text-white text-xs px-3 py-1 rounded-full">
-              {hotel.zone}, {hotel.city}
+              {hotel.city}, {hotel.country}
             </span>
           </div>
           <h1 className="text-2xl font-medium text-white mb-1">{hotel.name}</h1>
@@ -81,28 +82,24 @@ function HotelDetailPage() {
 
         {/* Contenido principal */}
         <div className="flex-1">
+          <p className="text-sm font-medium text-slate-800 mb-4">
+            Habitaciones disponibles
+            {rooms.length > 0 && (
+              <span className="text-slate-400 font-normal ml-2">({rooms.length})</span>
+            )}
+          </p>
 
-          {/* Sobre el hotel */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
-            <p className="text-sm font-medium text-slate-800 mb-3">Sobre el hotel</p>
-            <p className="text-sm text-slate-500 leading-relaxed mb-4">{hotel.description}</p>
-            <div className="flex flex-wrap gap-2">
-              {hotel.amenities.map(a => (
-                <span key={a} className="bg-slate-100 text-slate-500 text-xs px-3 py-1 rounded-full">
-                  {a}
-                </span>
+          {rooms.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {rooms.map(room => (
+                <RoomCard key={room.id} room={room} />
               ))}
             </div>
-          </div>
-
-          {/* Habitaciones */}
-          <p className="text-sm font-medium text-slate-800 mb-4">Habitaciones disponibles</p>
-          <div className="flex flex-col gap-3">
-            {hotel.rooms.map(room => (
-              <RoomCard key={room.id} room={room} />
-            ))}
-          </div>
-
+          ) : (
+            <div className="text-center py-16 text-slate-400">
+              <p className="text-sm">No hay habitaciones disponibles</p>
+            </div>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -122,13 +119,15 @@ function HotelDetailPage() {
                 </div>
               ))}
             </div>
-            <div className="border-t border-slate-100 pt-3">
-              <p className="text-xs text-slate-400 mb-1">Precio desde</p>
-              <p className="text-xl font-medium text-slate-800">
-                ${minPrice.toLocaleString()}
-                <span className="text-xs text-slate-400 font-normal"> / noche</span>
-              </p>
-            </div>
+            {minPrice && (
+              <div className="border-t border-slate-100 pt-3">
+                <p className="text-xs text-slate-400 mb-1">Precio desde</p>
+                <p className="text-xl font-medium text-slate-800">
+                  ${minPrice.toLocaleString()}
+                  <span className="text-xs text-slate-400 font-normal"> / noche</span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
