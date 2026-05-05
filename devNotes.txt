@@ -6,3 +6,6 @@ docker-compose up -d
 docker-compose exec frontend sh -c "npm run dev"
 Y para detenerlo:
 bashdocker-compose down
+
+Poblar hotel-db
+docker-compose exec frontend sh -c "node seed.cjs"
