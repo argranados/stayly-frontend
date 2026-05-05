@@ -26,7 +26,7 @@ function RoomCard({ room }) {
           </p>
           {isAvailable ? (
             <button
-              onClick={() => navigate(`/booking/${room.id}`)}
+              onClick={() => navigate(`/booking/${room.id}?hotelId=${room.hotelId}`)}
               className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
             >
               Reservar
